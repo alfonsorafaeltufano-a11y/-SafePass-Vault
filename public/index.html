@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#1e9be0" />
+  <meta name="description" content="SafePass Vault: gestor web cifrado de credenciales con AES-256-GCM, PBKDF2 y persistencia en archivos JSON cifrados." />
+  <title>SafePass Vault | Gestor Cifrado de Credenciales</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <a class="skip-link" href="#boveda">Saltar a la bóveda</a>
+
+  <header class="topbar glass">
+    <a href="#inicio" class="brand" aria-label="SafePass Vault, inicio">
+      <span class="brand-orb" aria-hidden="true"><span class="key-mark"></span></span>
+      <span class="brand-text">SafePass <strong>Vault</strong></span>
+    </a>
+
+    <button class="menu-toggle" id="menuToggle" aria-expanded="false" aria-controls="mainNav">
+      <span class="sr-only">Abrir menú</span>
+      <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+    </button>
+
+    <nav id="mainNav" class="main-nav" aria-label="Principal">
+      <ul>
+        <li><a href="#inicio">Inicio</a></li>
+        <li><a href="#boveda">Bóveda</a></li>
+        <li><a href="#generador">Generador</a></li>
+        <li><a href="#seguridad">Seguridad</a></li>
+        <li><a href="#arquitectura">Arquitectura</a></li>
+      </ul>
+    </nav>
+
+  <span class="status-pill" id="statusPill" data-state="locked" role="status" aria-live="polite">
+  <span class="dot" aria-hidden="true"></span><span id="statusText">Bloqueada</span>
+  </span>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section id="inicio" class="hero">
+      <div class="hero-bubbles" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="hero-inner">
+        <div class="hero-copy">
+          <p class="eyebrow">Ingeniería en Información · Ciberseguridad</p>
+          <h1>Protege cada credencial con cifrado <span class="accent">AES-256-GCM</span> de conocimiento cero</h1>
+          <p class="lead">
+            SafePass Vault centraliza usuarios, contraseñas, claves API y tokens en un archivo JSON cifrado y portátil.
+            Sin bases de datos pesadas, sin texto plano, sin riesgos.
+          </p>
+          <div class="hero-actions">
+            <a href="#boveda" class="btn btn-aqua btn-lg" id="heroCta">Abrir mi Bóveda</a>
+            <a href="#arquitectura" class="btn btn-glass btn-lg">Ver arquitectura</a>
+          </div>
+          <ul class="hero-badges" aria-label="Tecnologías de seguridad">
+            <li>AES-256-GCM</li>
+            <li>PBKDF2 · 250k</li>
+            <li>HMAC SHA-256</li>
+            <li>Archivos .enc</li>
+          </ul>
+        </div>
+        <div class="hero-visual glass" aria-hidden="true">
+          <span class="key-mark key-mark-large"></span>
+          <div class="hero-visual-meta">
+            <span>Bóveda cifrada con AES-256-GCM</span>
+            <code id="heroCipher">Cifrado activo en este navegador</code>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MÓDULO PRINCIPAL: BÓVEDA -->
+    <section id="boveda" class="section" aria-labelledby="bovedaTitle">
+      <div class="section-head">
+        <h2 id="bovedaTitle">Bóveda de credenciales</h2>
+        <p>Módulo principal: busca y filtra credenciales. Usa el botón del ojo para revelar una contraseña temporalmente.</p>
+      </div>
+
+      <aside class="field-guide glass" aria-labelledby="fieldGuideTitle">
+        <h3 id="fieldGuideTitle">Ejemplo de los campos de cada credencial</h3>
+        <p>Estos nombres describen la información y las acciones disponibles en cada registro.</p>
+        <ul class="field-guide-list">
+          <li><strong>Servicio</strong><span>Nombre de la cuenta</span></li>
+          <li><strong>Usuario</strong><span>Correo o identificador</span></li>
+          <li><strong>Contraseña</strong><span>Oculta hasta revelarla</span></li>
+          <li><strong>Categoría</strong><span>Grupo de la cuenta</span></li>
+          <li><strong>Fortaleza</strong><span>Estimación de seguridad</span></li>
+          <li><strong>Acciones</strong><span>Mostrar, copiar o eliminar</span></li>
+        </ul>
+      </aside>
+
+      <div class="vault-layout">
+        <!-- Módulo 1: Sidebar -->
+        <aside class="sidebar glass" aria-label="Filtros y archivo">
+          <button class="btn btn-green btn-block" id="newCredBtn">+ Nueva credencial</button>
+
+          <h3 class="side-title">Categorías</h3>
+          <ul class="cat-list" id="catList" role="list"></ul>
+
+          <h3 class="side-title">Gestor de archivos</h3>
+          <div class="file-card">
+            <span class="file-label">Archivo activo</span>
+            <code id="filePath">/data/vault_data.enc</code>
+            <span class="file-meta" id="fileMeta">Cargando…</span>
+          </div>
+  <p class="lock-description" id="lockDescription">La bóveda está bloqueada. Desbloquéala con tu Llave Maestra para usar tus credenciales.</p>
+  <div class="side-actions">
+  <button class="btn btn-aqua btn-sm btn-block" id="lockBtn" type="button">Desbloquear bóveda</button>
+  <button class="btn btn-glass btn-sm btn-block" id="exportBtn">Exportar backup</button>
+  <label class="btn btn-glass btn-sm btn-block" for="importInput">Importar backup</label>
+  <input type="file" id="importInput" accept=".enc,application/json" class="sr-only" />
+  </div>
+        </aside>
+
+        <!-- Módulo 2: Visor / Tabla -->
+        <div class="vault-main glass">
+          <div class="toolbar">
+            <div class="search">
+              <label for="searchInput" class="sr-only">Buscar credenciales</label>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input type="search" id="searchInput" placeholder="Buscar por servicio, URL o usuario…" autocomplete="off" />
+            </div>
+            <p class="result-count" id="resultCount" aria-live="polite"></p>
+          </div>
+
+          <div class="table-wrap">
+            <table class="data-table" id="credTable">
+              <caption class="sr-only">Listado de credenciales almacenadas</caption>
+              <thead class="sr-only">
+                <tr>
+                  <th scope="col">Servicio</th>
+                  <th scope="col">Usuario</th>
+                  <th scope="col">Contraseña</th>
+                  <th scope="col">Categoría</th>
+                  <th scope="col">Fortaleza</th>
+                  <th scope="col">Actualizado</th>
+                  <th scope="col">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="credBody"></tbody>
+            </table>
+            <p class="empty" id="emptyState" hidden>No se encontraron credenciales con esos filtros.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Módulo 3: Editor y generador -->
+    <section id="generador" class="section" aria-labelledby="genTitle">
+      <div class="section-head">
+        <h2 id="genTitle">Editor y generador de contraseñas</h2>
+        <p>Crea una contraseña robusta, mide su entropía en tiempo real y guárdala cifrada.</p>
+      </div>
+
+      <form class="editor glass" id="credForm" novalidate>
+        <div class="grid-2">
+          <div class="field">
+            <label for="fService">Servicio</label>
+            <input id="fService" name="service" required maxlength="60" placeholder="Ej. GitHub" />
+          </div>
+          <div class="field">
+            <label for="fUrl">URL</label>
+            <input id="fUrl" name="url" maxlength="120" placeholder="https://…" />
+          </div>
+          <div class="field">
+            <label for="fUser">Usuario</label>
+            <input id="fUser" name="username" required maxlength="80" placeholder="usuario o correo" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="fCat">Categoría</label>
+            <select id="fCat" name="category"></select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="fPass">Contraseña</label>
+          <div class="pass-input">
+            <input id="fPass" name="password" type="password" required maxlength="128" autocomplete="new-password" />
+            <button type="button" class="icon-btn" id="togglePass" aria-label="Mostrar contraseña" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <div class="meter" aria-hidden="true"><span id="meterBar"></span></div>
+          <p class="meter-label" id="meterLabel" aria-live="polite">Entropía: 0 bits</p>
+        </div>
+
+        <fieldset class="gen-box">
+          <legend>Generador</legend>
+          <div class="gen-row">
+            <label for="gLen">Longitud: <output id="gLenOut">20</output></label>
+            <input type="range" id="gLen" min="8" max="64" value="20" />
+          </div>
+          <div class="gen-checks">
+            <label><input type="checkbox" id="gUpper" checked /> Mayúsculas</label>
+            <label><input type="checkbox" id="gLower" checked /> Minúsculas</label>
+            <label><input type="checkbox" id="gDigits" checked /> Números</label>
+            <label><input type="checkbox" id="gSymbols" checked /> Símbolos</label>
+          </div>
+          <button type="button" class="btn btn-glass" id="genBtn">Generar contraseña</button>
+        </fieldset>
+
+        <div class="form-actions">
+          <button type="reset" class="btn btn-glass">Limpiar</button>
+          <button type="submit" class="btn btn-aqua">Guardar y cifrar</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Estado de seguridad -->
+    <section id="seguridad" class="section" aria-labelledby="secTitle">
+      <div class="section-head">
+        <h2 id="secTitle">Estado de seguridad</h2>
+        <p>Resumen calculado en memoria a partir de la entropía de cada credencial.</p>
+      </div>
+      <div class="stats">
+        <article class="stat glass"><span class="stat-num" id="statTotal">0</span><span class="stat-label">Credenciales</span></article>
+        <article class="stat glass"><span class="stat-num ok" id="statStrong">0</span><span class="stat-label">Fuertes</span></article>
+        <article class="stat glass"><span class="stat-num warn" id="statMedium">0</span><span class="stat-label">Medias</span></article>
+        <article class="stat glass"><span class="stat-num bad" id="statWeak">0</span><span class="stat-label">Débiles</span></article>
+      </div>
+    </section>
+
+    <!-- Arquitectura -->
+    <section id="arquitectura" class="section" aria-labelledby="archTitle">
+      <div class="section-head">
+        <h2 id="archTitle">Arquitectura en tres capas</h2>
+        <p>Diseño modular basado en el informe técnico del proyecto.</p>
+      </div>
+      <div class="layers">
+        <article class="layer glass">
+          <span class="layer-tag">Capa 1</span>
+          <h3>Frontend</h3>
+          <ul>
+            <li>Buscador global en tiempo real</li>
+            <li>Tabla de credenciales con filtrado por categoría</li>
+            <li>Formulario, generador y medidor de entropía</li>
+            <li>Modal de Llave Maestra y revelado seguro</li>
+          </ul>
+        </article>
+        <article class="layer glass">
+          <span class="layer-tag">Capa 2</span>
+          <h3>Backend lógico</h3>
+          <ul>
+            <li>Derivación de clave PBKDF2 + Salt</li>
+            <li>Cifrado simétrico AES-256-GCM con IV único</li>
+            <li>Firma de integridad HMAC SHA-256</li>
+            <li>Descifrado puntual sólo en memoria RAM</li>
+          </ul>
+        </article>
+        <article class="layer glass">
+          <span class="layer-tag">Capa 3</span>
+          <h3>Datos</h3>
+          <ul>
+            <li>Archivo maestro <code>vault_data.enc</code></li>
+            <li>Cabecera no cifrada: Salt, IV, versión</li>
+            <li>Cuerpo JSON cifrado</li>
+            <li>Respaldos <code>backup_YYYYMMDD.enc</code></li>
+          </ul>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>SafePass Vault · Proyecto Final de Trimestre — Ingeniería en Información</p>
+  </footer>
+
+  <!-- Modal Llave Maestra -->
+  <dialog id="unlockModal" class="modal glass" aria-labelledby="unlockTitle">
+    <form method="dialog" id="unlockForm">
+      <div class="modal-head">
+        <span class="brand-orb small" aria-hidden="true"><span class="key-mark"></span></span>
+        <h2 id="unlockTitle">Llave Maestra</h2>
+      </div>
+      <p id="unlockHint" class="modal-hint"></p>
+      <div class="field">
+        <label for="masterKey">Contraseña maestra</label>
+        <div class="pass-input">
+          <input id="masterKey" type="password" minlength="8" required autocomplete="current-password" />
+          <button type="button" class="icon-btn" id="toggleMaster" aria-label="Mostrar llave maestra" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <p class="form-error" id="unlockError" role="alert"></p>
+      <div class="form-actions">
+        <button type="button" class="btn btn-glass" id="cancelUnlock">Cancelar</button>
+        <button type="submit" class="btn btn-aqua" id="unlockSubmit">Desbloquear</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="toast-region" id="toasts" aria-live="polite" aria-atomic="false"></div>
+
+  <script id="vaultConfig" type="application/json">
+    {
+      "vault_id": "usr_safe_001",
+      "version": "1.0",
+      "file": "/data/vault_data.enc",
+      "salt": "a7f8b9c0d1e2f3a4b5c6d7e8f9a0b1c2",
+      "created_at": "2026-10-01T19:00:00Z",
+      "categories": ["Sitios Web", "Apps", "Servidores", "Desarrollo", "Notas"],
+      "credentials": []
+    }
+  </script>
+  <script src="js/app.js" defer></script>
+</body>
+</html>
